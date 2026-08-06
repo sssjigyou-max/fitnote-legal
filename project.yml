@@ -1,0 +1,110 @@
+name: FitNote
+options:
+  bundleIdPrefix: com.kaihishibusawa.fitnote
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: 12.16.0
+targets:
+  FitNote:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: FitNote
+    info:
+      path: FitNote/Resources/Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        CFBundleDisplayName: 減量・増量ナビ
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSHealthShareUsageDescription: "体重・体組成・歩数・水分・栄養・睡眠・ワークアウトなどのHealthKitデータを読み取り、各タブに表示するために使用します。"
+        NSHealthUpdateUsageDescription: "現在減量・増量ナビからHealthKitへのデータ書き込みは行っていませんが、将来の機能拡張に備えて許可をリクエストする場合があります。"
+        NSCameraUsageDescription: "体型写真・食事写真の撮影やバーコードスキャンのためにカメラを使用します。"
+        NSPhotoLibraryUsageDescription: "選択した体型写真・食事写真の撮影日時を取得するために使用します。写真は選択したものだけがこの端末のアプリ内に保存され、外部には送信されません。"
+        NSLocationWhenInUseUsageDescription: "ランニング時のルートと距離を記録するために使用します。"
+        NSSupportsLiveActivities: true
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UIBackgroundModes:
+          - location
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - fitnote
+            CFBundleURLName: com.kaihishibusawa.fitnote.FitNote
+        LSApplicationQueriesSchemes:
+          - youtube
+    entitlements:
+      path: FitNote/Resources/FitNote.entitlements
+      properties:
+        # [重要・個人チーム(無料)での署名について] 以下3つのCapabilityは有料のApple
+        # Developer Programでのみ使用できる(個人チームでは
+        # 「Personal development teams do not support the ○○ capability」で
+        # ビルド失敗する)ため、2026年8月に有料登録するまで一時的にコメントアウトしている。
+        # 有料登録後、この3行のコメントを外せば元通り有効になる(対応するSwift側の
+        # コードは既にHealthKit/Push通知が使えない場合でもクラッシュしないよう
+        # try/catchで書かれているため、コード側の変更は不要)。
+        #   com.apple.developer.healthkit: true
+        #   com.apple.developer.healthkit.access: []
+        #   com.apple.developer.associated-domains:
+        #     - applinks:fitnote.app
+        #   aps-environment: development
+        com.apple.security.application-groups:
+          - group.com.kaihishibusawa.fitnote
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaihishibusawa.fitnote.FitNote
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    dependencies:
+      - package: Firebase
+        product: FirebaseFirestore
+      - package: Firebase
+        product: FirebaseMessaging
+      - package: Firebase
+        product: FirebaseAuth
+      - target: FitNoteWidgetExtension
+        embed: true
+
+  FitNoteWidgetExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: FitNoteWidget
+      - path: FitNote/Shared
+    info:
+      path: FitNoteWidget/Info.plist
+      properties:
+        CFBundleDisplayName: 減量・増量ナビ
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: FitNoteWidget/FitNoteWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.kaihishibusawa.fitnote
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaihishibusawa.fitnote.FitNote.FitNoteWidget
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: NO
+schemes:
+  FitNote:
+    build:
+      targets:
+        FitNote: all
+        FitNoteWidgetExtension: all
+    run:
+      config: Debug
